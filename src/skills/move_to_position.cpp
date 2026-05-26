@@ -18,8 +18,8 @@ bool MoveToPosition::is_done() const {
     return done_;
 }
 
-RobotCommand MoveToPosition::execute(int robot_id, WorldModel& world) {
-    RobotCommand cmd;
+RobotCmd MoveToPosition::execute(int robot_id, WorldModel& world) {
+    RobotCmd cmd;
     cmd.robot_id   = robot_id;
     cmd.vx         = 0;
     cmd.vy         = 0;

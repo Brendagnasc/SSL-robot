@@ -5,7 +5,7 @@ class MoveToPosition : public Skill {
 public:
     MoveToPosition(float target_x, float target_y, float target_angle = 0.0f);
 
-    RobotCommand execute(int robot_id, WorldModel& world) override;
+    RobotCmd execute(int robot_id, WorldModel& world) override;
     bool is_done() const override;
 
     void set_target(float x, float y, float angle = 0.0f);

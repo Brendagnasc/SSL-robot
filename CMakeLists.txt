@@ -10,7 +10,19 @@ find_package(Boost REQUIRED COMPONENTS system)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(MEMCACHED REQUIRED libmemcached)
 
-file(GLOB PROTO_FILES "${CMAKE_SOURCE_DIR}/proto/*.proto")
+set(PROTO_FILES
+    proto/messages_robocup_ssl_detection.proto
+    proto/messages_robocup_ssl_geometry.proto
+    proto/messages_robocup_ssl_geometry_legacy.proto
+    proto/messages_robocup_ssl_wrapper.proto
+    proto/messages_robocup_ssl_wrapper_legacy.proto
+    proto/grSim_Packet.proto
+    proto/grSim_Commands.proto
+    proto/grSim_Replacement.proto
+    proto/ssl_gc_common.proto
+    proto/ssl_simulation_robot_control.proto
+)
+
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
 
 include_directories(
@@ -27,6 +39,7 @@ add_executable(ssl_robot
     src/world/world_model.cpp
     src/strategy/strategy_engine.cpp
     src/skills/move_to_position.cpp
+    src/comm/robot_comm.cpp
     ${PROTO_SRCS}
 )
 

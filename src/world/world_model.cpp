@@ -9,7 +9,8 @@ WorldModel::WorldModel() {
     );
     memcached_server_push(mc_, servers);
     memcached_server_list_free(servers);
-    memcached_behavior_set(mc_, MEMCACHED_BEHAVIOR_NO_BLOCK, 1);
+    memcached_behavior_set(mc_, MEMCACHED_BEHAVIOR_NO_BLOCK, 0);
+    memcached_behavior_set(mc_, MEMCACHED_BEHAVIOR_TCP_NODELAY, 1);
     std::cout << "[WorldModel] Conectado ao Memcached\n";
 }
 
@@ -18,6 +19,7 @@ WorldModel::~WorldModel() {
 }
 
 void WorldModel::mc_set(const std::string& key, const std::string& value, time_t ttl) {
+    std::lock_guard<std::mutex> lock(mutex_);
     memcached_return_t rc = memcached_set(
         mc_, key.c_str(), key.size(),
         value.c_str(), value.size(), ttl, 0
@@ -28,6 +30,7 @@ void WorldModel::mc_set(const std::string& key, const std::string& value, time_t
 }
 
 std::string WorldModel::mc_get(const std::string& key) {
+    std::lock_guard<std::mutex> lock(mutex_);
     size_t val_len;
     uint32_t flags;
     memcached_return_t rc;
