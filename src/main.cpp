@@ -17,14 +17,14 @@ int main() {
 
     world.set_game_state("RUNNING");
 
-    // Skills para cada robô
+    // Posições fixas em mm (campo SSL: 9000x6000mm)
     MoveToPosition skills[6] = {
-        {0, -4000},   // goleiro
-        {-2000, -1000}, // defensor 1
-        {-2000,  1000}, // defensor 2
-        {0, 0},       // meio 1
-        {0, 0},       // meio 2
-        {0, 0}        // atacante
+        {   0, -2500},  // R0: goleiro (embaixo do gol)
+        {-1500,  -800},  // R1: defensor esquerdo
+        {-1500,   800},  // R2: defensor direito
+        {   0,     0},  // R3: meio (começa no centro)
+        { 500,  -500},  // R4: meio ofensivo
+        {1000,     0}   // R5: atacante
     };
 
     std::thread strategy_thread([&]() {
@@ -36,16 +36,14 @@ int main() {
             for (auto& role : roles) {
                 int id = role.robot_id;
 
-                if (role.role == Role::ATTACKER && ball) {
-                    // Atacante segue a bola
+                if (role.role == Role::ATTACKER && ball)
                     skills[id].set_target(ball->x, ball->y);
-                }
 
                 auto cmd = skills[id].execute(id, world);
                 comm.send(cmd);
             }
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(16)); // ~60Hz
+            std::this_thread::sleep_for(std::chrono::milliseconds(16));
         }
     });
     strategy_thread.detach();
