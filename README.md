@@ -1,30 +1,31 @@
 # SSL Robot — RoboCup Small Size League
 
-Projeto de futebol de robôs para a RoboCup Small Size League (SSL), Division A (6v6).
+[![C++ Standard](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://en.cppreference.com/w/cpp/17)
+[![Subleague](https://img.shields.io/badge/RoboCup-SSL%20Division%20A-green.svg)](https://ssl.robocup.org/)
 
-## Stack
-- **Linguagem:** C++17
-- **Simulador:** grSim
-- **Memória de jogo:** Memcached
-- **Protocolo:** SSL Vision (protobuf + UDP)
+Projeto de inteligência artificial e controle de futebol de robôs desenvolvido para a **RoboCup Small Size League (SSL)**, especificamente para a **Division A (6v6)**. O sistema é responsável por processar os dados geométricos do campo e de arbitragem em tempo real, gerando o modelo de mundo, definindo táticas e enviando comandos de movimentação para os robôs.
 
-## Estrutura
-\`\`\`
+---
+
+## 🛠️ Stack Tecnológica
+
+* **Linguagem Principal:** C++17 (foco em alto desempenho e baixa latência)
+* **Simulador:** [grSim](https://github.com/RoboCup-SSL/grSim)
+* **Gerenciamento de Estado:** [Memcached](https://memcached.org/) (utilizado como memória compartilhada e cache para cálculos geométricos pesados)
+* **Protocolos de Rede:** SSL-Vision e SSL-Refbox via Google Protocol Buffers (Protobuf) encapsulados em UDP multicast.
+
+---
+
+## 📂 Estrutura do Projeto
+
+```text
 ssl-robot/
-├── proto/        ← Protobufs oficiais do SSL
+├── proto/           # Arquivos .proto oficiais da SSL (Vision, Referee e grSim)
 ├── src/
-│   ├── vision/   ← Vision Client (UDP receiver)
-│   ├── referee/  ← Referee Client
-│   ├── world/    ← World Model + Memcached
-│   ├── strategy/ ← Motor de táticas
-│   ├── skills/   ← Comportamentos dos robôs
-│   └── comm/     ← Comunicação por rádio
-└── tests/
-\`\`\`
-
-## Como compilar
-\`\`\`bash
-mkdir build && cd build
-cmake ..
-make -j$(nproc)
-\`\`\`
+│   ├── vision/      # Cliente receptor e parser dos pacotes do SSL-Vision
+│   ├── referee/     # Cliente receptor dos comandos do juiz (Refbox)
+│   ├── world/       # Modelo de Mundo e persistência/sincronização via Memcached
+│   ├── strategy/    # Motor de táticas, papéis, jogadas e tomada de decisão de alto nível
+│   ├── skills/      # Comportamentos individuais dos robôs (ex: GoToPoint, Kick, Intercept)
+│   └── comm/        # Módulo de envio de comandos de baixa latência (rádio ou simulador)
+└── tests/           # Testes unitários e de integração
