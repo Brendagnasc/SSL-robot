@@ -25,6 +25,7 @@ add_executable(ssl_robot
     src/main.cpp
     src/vision/vision_client.cpp
     src/world/world_model.cpp
+    src/strategy/strategy_engine.cpp
     ${PROTO_SRCS}
 )
 
