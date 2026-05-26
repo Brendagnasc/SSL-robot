@@ -10,7 +10,7 @@ public:
     VisionClient(boost::asio::io_context& io,
                  WorldModel& world,
                  const std::string& host = "224.5.23.2",
-                 unsigned short port = 10006);
+                 unsigned short port = 10020);
     void start();
 
 private:
