@@ -1,6 +1,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <atomic>
 #include <boost/asio.hpp>
 #include "vision/vision_client.h"
 #include "world/world_model.h"
@@ -17,15 +18,16 @@ int main() {
 
     world.set_game_state("RUNNING");
 
-    // Posições fixas em mm (campo SSL: 9000x6000mm)
     MoveToPosition skills[6] = {
-        {   0, -2500},  // R0: goleiro (embaixo do gol)
-        {-1500,  -800},  // R1: defensor esquerdo
-        {-1500,   800},  // R2: defensor direito
-        {   0,     0},  // R3: meio (começa no centro)
-        { 500,  -500},  // R4: meio ofensivo
-        {1000,     0}   // R5: atacante
+        {   0, -2500},
+        {-1500,  -800},
+        {-1500,   800},
+        {   0,     0},
+        { 500,  -500},
+        {1000,     0}
     };
+
+    std::atomic<int> frame{0};
 
     std::thread strategy_thread([&]() {
         while (true) {
@@ -35,12 +37,24 @@ int main() {
 
             for (auto& role : roles) {
                 int id = role.robot_id;
-
                 if (role.role == Role::ATTACKER && ball)
                     skills[id].set_target(ball->x, ball->y);
-
                 auto cmd = skills[id].execute(id, world);
                 comm.send(cmd);
+            }
+
+            // Log resumido a cada 60 frames (~1s)
+            if (frame++ % 60 == 0) {
+                std::cout << "\n--- Frame " << frame << " ---\n";
+                if (ball)
+                    std::cout << "Bola: (" << ball->x << ", " << ball->y << ")\n";
+                for (auto& role : roles) {
+                    auto r = world.get_robot_blue(role.robot_id);
+                    if (r)
+                        std::cout << "R" << role.robot_id
+                                  << " [" << role_to_string(role.role) << "]"
+                                  << " pos=(" << r->x << ", " << r->y << ")\n";
+                }
             }
 
             std::this_thread::sleep_for(std::chrono::milliseconds(16));
