@@ -29,12 +29,16 @@ RobotCmd MoveToPosition::execute(int robot_id, WorldModel& world) {
     float dy   = target_y_ - robot->y;
     float dist = std::sqrt(dx * dx + dy * dy);
 
-    if (dist < ARRIVAL_THRESHOLD) { done_ = true; return cmd; }
+    // Zona morta pequena — para vibração mas mantém posição
+    if (dist < 30.0f) return cmd;
 
     float vx = KP * dx;
     float vy = KP * dy;
     float speed = std::sqrt(vx * vx + vy * vy);
-    if (speed > MAX_SPEED) { vx = vx / speed * MAX_SPEED; vy = vy / speed * MAX_SPEED; }
+    if (speed > MAX_SPEED) {
+        vx = vx / speed * MAX_SPEED;
+        vy = vy / speed * MAX_SPEED;
+    }
 
     float angle_err = target_angle_ - robot->angle;
     while (angle_err >  M_PI) angle_err -= 2 * M_PI;

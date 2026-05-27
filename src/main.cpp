@@ -18,13 +18,15 @@ int main() {
 
     world.set_game_state("RUNNING");
 
+    // Campo SSL: X=±4500mm, Y=±3000mm
+    // Time azul defende o gol em X negativo
     MoveToPosition skills[6] = {
-        {   0, -2500},
-        {-1500,  -800},
-        {-1500,   800},
-        {   0,     0},
-        { 500,  -500},
-        {1000,     0}
+        {-3800,    0},   // R0: goleiro na frente do gol
+        {-2500, -800},   // R1: defensor esquerdo
+        {-2500,  800},   // R2: defensor direito
+        { -500, -500},   // R3: meio esquerdo
+        { -500,  500},   // R4: meio direito
+        {  500,    0}    // R5: atacante avançado
     };
 
     std::atomic<int> frame{0};
@@ -43,7 +45,6 @@ int main() {
                 comm.send(cmd);
             }
 
-            // Log resumido a cada 60 frames (~1s)
             if (frame++ % 60 == 0) {
                 std::cout << "\n--- Frame " << frame << " ---\n";
                 if (ball)

@@ -1,6 +1,7 @@
 #include "vision_client.h"
 #include <iostream>
 #include <chrono>
+#include <limits>
 
 using namespace boost::asio;
 using udp = ip::udp;
@@ -45,15 +46,20 @@ void VisionClient::process(const SSL_WrapperPacket& pkt) {
     if (!pkt.has_detection()) return;
     const auto& det = pkt.detection();
 
+    // Bola: pega a de maior confidence
     if (!det.balls().empty()) {
-        const auto& b = det.balls(0);
-        world_.set_ball({ b.x(), b.y(), 0.f, 0.f, now_ms() });
-        std::cout << "[Vision] Bola: (" << b.x() << ", " << b.y() << ")\n";
+        const auto* best = &det.balls(0);
+        for (const auto& b : det.balls())
+            if (b.confidence() > best->confidence()) best = &b;
+        world_.set_ball({ best->x(), best->y(), 0.f, 0.f, now_ms() });
     }
 
+    // Robôs: atualiza normalmente
     for (const auto& r : det.robots_blue())
-        world_.set_robot_blue({ r.robot_id(), r.x(), r.y(), r.orientation(), 0, 0, now_ms() });
+        world_.set_robot_blue({ (int)r.robot_id(), r.x(), r.y(),
+                                r.orientation(), 0, 0, now_ms() });
 
     for (const auto& r : det.robots_yellow())
-        world_.set_robot_yellow({ r.robot_id(), r.x(), r.y(), r.orientation(), 0, 0, now_ms() });
+        world_.set_robot_yellow({ (int)r.robot_id(), r.x(), r.y(),
+                                  r.orientation(), 0, 0, now_ms() });
 }
