@@ -7,6 +7,7 @@
 #include "world/world_model.h"
 #include "strategy/strategy_engine.h"
 #include "skills/move_to_position.h"
+#include "skills/goalkeeper.h"
 #include "comm/robot_comm.h"
 
 int main() {
@@ -18,15 +19,15 @@ int main() {
 
     world.set_game_state("RUNNING");
 
-    // Campo SSL: X=±4500mm, Y=±3000mm
-    // Time azul defende o gol em X negativo
+    // Skills individuais
+    Goalkeeper     gk_skill(-3800.0f);
     MoveToPosition skills[6] = {
-        {-3800,    0},   // R0: goleiro na frente do gol
+        {-3800,    0},   // R0: não usado (usa gk_skill)
         {-2500, -800},   // R1: defensor esquerdo
         {-2500,  800},   // R2: defensor direito
         { -500, -500},   // R3: meio esquerdo
         { -500,  500},   // R4: meio direito
-        {  500,    0}    // R5: atacante avançado
+        {  500,    0}    // R5: atacante
     };
 
     std::atomic<int> frame{0};
@@ -39,13 +40,22 @@ int main() {
 
             for (auto& role : roles) {
                 int id = role.robot_id;
-                if (role.role == Role::ATTACKER && ball)
+                RobotCmd cmd;
+
+                if (role.role == Role::GOALKEEPER) {
+                    cmd = gk_skill.execute(id, world);
+                } else if (role.role == Role::ATTACKER && ball) {
                     skills[id].set_target(ball->x, ball->y);
-                auto cmd = skills[id].execute(id, world);
+                    cmd = skills[id].execute(id, world);
+                } else {
+                    cmd = skills[id].execute(id, world);
+                }
+
                 comm.send(cmd);
             }
 
             if (frame++ % 60 == 0) {
+                auto ball = world.get_ball();
                 std::cout << "\n--- Frame " << frame << " ---\n";
                 if (ball)
                     std::cout << "Bola: (" << ball->x << ", " << ball->y << ")\n";

@@ -39,6 +39,7 @@ add_executable(ssl_robot
     src/world/world_model.cpp
     src/strategy/strategy_engine.cpp
     src/skills/move_to_position.cpp
+    src/skills/goalkeeper.cpp
     src/comm/robot_comm.cpp
     ${PROTO_SRCS}
 )
