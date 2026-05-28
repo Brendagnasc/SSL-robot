@@ -8,6 +8,7 @@
 #include "strategy/strategy_engine.h"
 #include "skills/move_to_position.h"
 #include "skills/goalkeeper.h"
+#include "skills/kick_to_goal.h"
 #include "comm/robot_comm.h"
 
 int main() {
@@ -19,15 +20,15 @@ int main() {
 
     world.set_game_state("RUNNING");
 
-    // Skills individuais
-    Goalkeeper     gk_skill(-3800.0f);
+    Goalkeeper  gk_skill(-3800.0f);
+    KickToGoal  kick_skill(4500.0f, 0.0f);
     MoveToPosition skills[6] = {
-        {-3800,    0},   // R0: não usado (usa gk_skill)
-        {-2500, -800},   // R1: defensor esquerdo
-        {-2500,  800},   // R2: defensor direito
-        { -500, -500},   // R3: meio esquerdo
-        { -500,  500},   // R4: meio direito
-        {  500,    0}    // R5: atacante
+        {-3800,    0},
+        {-2500, -800},
+        {-2500,  800},
+        { -500, -500},
+        { -500,  500},
+        {  500,    0}
     };
 
     std::atomic<int> frame{0};
@@ -44,9 +45,8 @@ int main() {
 
                 if (role.role == Role::GOALKEEPER) {
                     cmd = gk_skill.execute(id, world);
-                } else if (role.role == Role::ATTACKER && ball) {
-                    skills[id].set_target(ball->x, ball->y);
-                    cmd = skills[id].execute(id, world);
+                } else if (role.role == Role::ATTACKER) {
+                    cmd = kick_skill.execute(id, world);
                 } else {
                     cmd = skills[id].execute(id, world);
                 }
