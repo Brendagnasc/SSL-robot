@@ -9,6 +9,7 @@
 #include "skills/move_to_position.h"
 #include "skills/goalkeeper.h"
 #include "skills/kick_to_goal.h"
+#include "skills/intercept_ball.h"
 #include "comm/robot_comm.h"
 
 int main() {
@@ -20,8 +21,10 @@ int main() {
 
     world.set_game_state("RUNNING");
 
-    Goalkeeper  gk_skill(-3800.0f);
-    KickToGoal  kick_skill(4500.0f, 0.0f);
+    Goalkeeper     gk_skill(-3800.0f);
+    KickToGoal     kick_skill(4500.0f, 0.0f);
+    InterceptBall  intercept1(-2500.0f);
+    InterceptBall  intercept2(-2500.0f);
     MoveToPosition skills[6] = {
         {-3800,    0},
         {-2500, -800},
@@ -43,12 +46,22 @@ int main() {
                 int id = role.robot_id;
                 RobotCmd cmd;
 
-                if (role.role == Role::GOALKEEPER) {
-                    cmd = gk_skill.execute(id, world);
-                } else if (role.role == Role::ATTACKER) {
-                    cmd = kick_skill.execute(id, world);
-                } else {
-                    cmd = skills[id].execute(id, world);
+                switch (role.role) {
+                    case Role::GOALKEEPER:
+                        cmd = gk_skill.execute(id, world);
+                        break;
+                    case Role::DEFENDER:
+                        if (id == 1)
+                            cmd = intercept1.execute(id, world);
+                        else
+                            cmd = intercept2.execute(id, world);
+                        break;
+                    case Role::ATTACKER:
+                        cmd = kick_skill.execute(id, world);
+                        break;
+                    default:
+                        cmd = skills[id].execute(id, world);
+                        break;
                 }
 
                 comm.send(cmd);

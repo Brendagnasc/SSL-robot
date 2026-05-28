@@ -23,10 +23,11 @@ void RobotComm::send(const RobotCmd& cmd) {
 
     robot_cmd->set_id(cmd.robot_id);
 
-    auto* move = robot_cmd->mutable_move_command();
-    auto* vel  = move->mutable_local_velocity();
-    vel->set_forward(cmd.vx);
-    vel->set_left(cmd.vy);
+    // Usa velocidade global (eixo do campo) em vez de local (eixo do robô)
+    auto* move  = robot_cmd->mutable_move_command();
+    auto* vel   = move->mutable_global_velocity();
+    vel->set_x(cmd.vx);
+    vel->set_y(cmd.vy);
     vel->set_angular(cmd.vw);
 
     if (cmd.kick) {

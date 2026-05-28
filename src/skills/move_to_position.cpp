@@ -7,8 +7,8 @@ MoveToPosition::MoveToPosition(float target_x, float target_y, float target_angl
 {}
 
 void MoveToPosition::set_target(float x, float y, float angle) {
-    target_x_     = x;
-    target_y_     = y;
+    target_x_     = std::clamp(x, -4400.0f, 4400.0f);
+    target_y_     = std::clamp(y, -2900.0f, 2900.0f);
     target_angle_ = angle;
     done_         = false;
 }
@@ -29,7 +29,6 @@ RobotCmd MoveToPosition::execute(int robot_id, WorldModel& world) {
     float dy   = target_y_ - robot->y;
     float dist = std::sqrt(dx * dx + dy * dy);
 
-    // Zona morta pequena — para vibração mas mantém posição
     if (dist < 30.0f) return cmd;
 
     float vx = KP * dx;

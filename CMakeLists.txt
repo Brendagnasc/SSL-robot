@@ -41,6 +41,7 @@ add_executable(ssl_robot
     src/skills/move_to_position.cpp
     src/skills/goalkeeper.cpp
     src/skills/kick_to_goal.cpp
+    src/skills/intercept_ball.cpp
     src/comm/robot_comm.cpp
     ${PROTO_SRCS}
 )
