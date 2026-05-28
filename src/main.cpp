@@ -12,6 +12,19 @@
 #include "skills/intercept_ball.h"
 #include "comm/robot_comm.h"
 
+// Calcula posição do meia baseado na bola
+std::pair<float,float> midfielder_position(int robot_id, const BallState& ball) {
+    float side = (robot_id == 3) ? -1.0f : 1.0f; // R3 esquerda, R4 direita
+
+    if (ball.x > 0) {
+        // Bola no campo adversário — avança para apoiar
+        return { ball.x - 600.0f, side * 600.0f };
+    } else {
+        // Bola no nosso campo — recua para defender
+        return { -500.0f, side * 500.0f };
+    }
+}
+
 int main() {
     std::cout << "=== SSL Robot iniciando ===\n";
 
@@ -21,18 +34,13 @@ int main() {
 
     world.set_game_state("RUNNING");
 
-    Goalkeeper     gk_skill(-3800.0f);
-    KickToGoal     kick_skill(4500.0f, 0.0f);
-    InterceptBall  intercept1(-2500.0f);
-    InterceptBall  intercept2(-2500.0f);
-    MoveToPosition skills[6] = {
-        {-3800,    0},
-        {-2500, -800},
-        {-2500,  800},
-        { -500, -500},
-        { -500,  500},
-        {  500,    0}
-    };
+    Goalkeeper    gk_skill(-3800.0f);
+    KickToGoal    kick_skill(4500.0f, 0.0f);
+    InterceptBall intercept1(-2500.0f);
+    InterceptBall intercept2(-2500.0f);
+    MoveToPosition mid3(-500.0f, -500.0f);
+    MoveToPosition mid4(-500.0f,  500.0f);
+    MoveToPosition mid5( 500.0f,    0.0f);
 
     std::atomic<int> frame{0};
 
@@ -50,17 +58,33 @@ int main() {
                     case Role::GOALKEEPER:
                         cmd = gk_skill.execute(id, world);
                         break;
+
                     case Role::DEFENDER:
-                        if (id == 1)
-                            cmd = intercept1.execute(id, world);
-                        else
-                            cmd = intercept2.execute(id, world);
+                        cmd = (id == 1)
+                            ? intercept1.execute(id, world)
+                            : intercept2.execute(id, world);
                         break;
+
                     case Role::ATTACKER:
                         cmd = kick_skill.execute(id, world);
                         break;
-                    default:
-                        cmd = skills[id].execute(id, world);
+
+                    case Role::MIDFIELDER:
+                        if (ball) {
+                            if (id == 3) {
+                                auto [tx, ty] = midfielder_position(3, *ball);
+                                mid3.set_target(tx, ty);
+                                cmd = mid3.execute(id, world);
+                            } else if (id == 4) {
+                                auto [tx, ty] = midfielder_position(4, *ball);
+                                mid4.set_target(tx, ty);
+                                cmd = mid4.execute(id, world);
+                            } else {
+                                // R5 como segundo atacante
+                                mid5.set_target(ball->x - 400.0f, ball->y);
+                                cmd = mid5.execute(id, world);
+                            }
+                        }
                         break;
                 }
 
