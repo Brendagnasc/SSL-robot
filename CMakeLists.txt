@@ -21,6 +21,7 @@ set(PROTO_FILES
     proto/grSim_Replacement.proto
     proto/ssl_gc_common.proto
     proto/ssl_simulation_robot_control.proto
+    proto/ssl_referee_simple.proto
 )
 
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
@@ -42,6 +43,7 @@ add_executable(ssl_robot
     src/skills/goalkeeper.cpp
     src/skills/kick_to_goal.cpp
     src/skills/intercept_ball.cpp
+    src/referee/referee_client.cpp
     src/comm/robot_comm.cpp
     ${PROTO_SRCS}
 )
