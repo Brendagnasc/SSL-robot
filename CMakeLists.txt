@@ -39,11 +39,13 @@ add_executable(ssl_robot
     src/vision/vision_client.cpp
     src/world/world_model.cpp
     src/strategy/strategy_engine.cpp
+    src/strategy/formation.cpp
     src/skills/move_to_position.cpp
     src/skills/goalkeeper.cpp
     src/skills/kick_to_goal.cpp
     src/skills/intercept_ball.cpp
     src/referee/referee_client.cpp
+    src/dashboard/dashboard.cpp
     src/comm/robot_comm.cpp
     ${PROTO_SRCS}
 )
