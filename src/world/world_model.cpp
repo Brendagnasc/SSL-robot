@@ -2,6 +2,8 @@
 #include <iostream>
 #include <sstream>
 
+static bool SHOW_MEMCACHED_LOG = false;
+
 WorldModel::WorldModel() {
     mc_ = memcached_create(nullptr);
     memcached_server_st* servers = memcached_server_list_append(
@@ -11,11 +13,16 @@ WorldModel::WorldModel() {
     memcached_server_list_free(servers);
     memcached_behavior_set(mc_, MEMCACHED_BEHAVIOR_NO_BLOCK, 0);
     memcached_behavior_set(mc_, MEMCACHED_BEHAVIOR_TCP_NODELAY, 1);
-    std::cout << "[WorldModel] Conectado ao Memcached\n";
+    std::cout << "[Memcached] Conectado em 127.0.0.1:11211\n";
+    std::cout << "[Memcached] TTL bola/robos: 1s | game_state: sem expiracao\n";
 }
 
 WorldModel::~WorldModel() {
     memcached_free(mc_);
+}
+
+void WorldModel::enable_log(bool enable) {
+    SHOW_MEMCACHED_LOG = enable;
 }
 
 void WorldModel::mc_set(const std::string& key, const std::string& value, time_t ttl) {
@@ -24,8 +31,11 @@ void WorldModel::mc_set(const std::string& key, const std::string& value, time_t
         mc_, key.c_str(), key.size(),
         value.c_str(), value.size(), ttl, 0
     );
+    if (SHOW_MEMCACHED_LOG)
+        std::cout << "[MC SET] " << key << " = " << value
+                  << " (ttl=" << ttl << "s)\n";
     if (rc != MEMCACHED_SUCCESS)
-        std::cerr << "[WorldModel] Erro em " << key << ": "
+        std::cerr << "[MC ERR] " << key << ": "
                   << memcached_strerror(mc_, rc) << "\n";
 }
 
@@ -38,6 +48,8 @@ std::string WorldModel::mc_get(const std::string& key) {
     if (rc != MEMCACHED_SUCCESS || !val) return "";
     std::string result(val, val_len);
     free(val);
+    if (SHOW_MEMCACHED_LOG)
+        std::cout << "[MC GET] " << key << " = " << result << "\n";
     return result;
 }
 

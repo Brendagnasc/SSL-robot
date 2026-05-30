@@ -1,6 +1,6 @@
 #include "strategy_engine.h"
 #include <cmath>
-#include <iostream>
+#include <algorithm>
 
 StrategyEngine::StrategyEngine(WorldModel& world) : world_(world) {
     roles_[0] = { 0, Role::GOALKEEPER };
@@ -17,14 +17,14 @@ float StrategyEngine::distance(float x1, float y1, float x2, float y2) {
 
 int StrategyEngine::closest_robot_to_ball() {
     auto ball = world_.get_ball();
-    if (!ball) return -1;
-    int   closest_id   = -1;
+    if (!ball) return 3;
+    int   closest_id   = 3;
     float closest_dist = 1e9f;
-    for (int i = 0; i < 6; i++) {
+    for (int i = 1; i < 6; i++) {
         auto robot = world_.get_robot_blue(i);
         if (!robot) continue;
-        float dist = distance(robot->x, robot->y, ball->x, ball->y);
-        if (dist < closest_dist) { closest_dist = dist; closest_id = i; }
+        float d = distance(robot->x, robot->y, ball->x, ball->y);
+        if (d < closest_dist) { closest_dist = d; closest_id = i; }
     }
     return closest_id;
 }
@@ -32,12 +32,22 @@ int StrategyEngine::closest_robot_to_ball() {
 void StrategyEngine::assign_roles() {
     auto ball = world_.get_ball();
     if (!ball) return;
+
+    // Goleiro sempre fixo
     roles_[0] = { 0, Role::GOALKEEPER };
-    roles_[1] = { 1, Role::DEFENDER };
-    roles_[2] = { 2, Role::DEFENDER };
-    int closest = closest_robot_to_ball();
-    for (int i = 3; i <= 5; i++)
-        roles_[i] = { i, (i == closest) ? Role::ATTACKER : Role::MIDFIELDER };
+
+    // Robô mais próximo da bola vai buscar ela (exceto goleiro)
+    int chaser = closest_robot_to_ball();
+
+    for (int i = 1; i <= 5; i++) {
+        if (i == chaser) {
+            roles_[i] = { i, Role::ATTACKER };
+        } else if (i <= 2) {
+            roles_[i] = { i, Role::DEFENDER };
+        } else {
+            roles_[i] = { i, Role::MIDFIELDER };
+        }
+    }
 }
 
 void StrategyEngine::update() { assign_roles(); }

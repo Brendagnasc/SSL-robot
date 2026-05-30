@@ -21,6 +21,8 @@ public:
     WorldModel();
     ~WorldModel();
 
+    void enable_log(bool enable);
+
     void set_ball(const BallState& ball);
     void set_robot_blue(const RobotState& robot);
     void set_robot_yellow(const RobotState& robot);

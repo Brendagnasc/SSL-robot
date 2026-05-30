@@ -15,36 +15,66 @@ void MoveToPosition::set_target(float x, float y, float angle) {
 
 bool MoveToPosition::is_done() const { return done_; }
 
+static std::pair<float,float> compute_repulsion(
+    float rx, float ry, WorldModel& world, int self_id)
+{
+    float fx = 0, fy = 0;
+    // Repulsão dos próprios robôs
+    for (int i = 0; i < 6; i++) {
+        if (i == self_id) continue;
+        auto r = world.get_robot_blue(i);
+        if (!r) continue;
+        float dx = rx - r->x, dy = ry - r->y;
+        float dist = std::sqrt(dx*dx + dy*dy);
+        if (dist < 180.0f && dist > 1.0f) {
+            float f = (180.0f - dist) / 180.0f * 0.4f;
+            fx += (dx/dist)*f; fy += (dy/dist)*f;
+        }
+    }
+    // Repulsão dos robôs adversários
+    for (int i = 0; i < 6; i++) {
+        auto r = world.get_robot_yellow(i);
+        if (!r) continue;
+        float dx = rx - r->x, dy = ry - r->y;
+        float dist = std::sqrt(dx*dx + dy*dy);
+        if (dist < 220.0f && dist > 1.0f) {
+            float f = (220.0f - dist) / 220.0f * 0.5f;
+            fx += (dx/dist)*f; fy += (dy/dist)*f;
+        }
+    }
+    return {fx, fy};
+}
+
 RobotCmd MoveToPosition::execute(int robot_id, WorldModel& world) {
     RobotCmd cmd;
-    cmd.robot_id   = robot_id;
+    cmd.robot_id = robot_id;
     cmd.vx = cmd.vy = cmd.vw = 0;
-    cmd.kick = false;
-    cmd.kick_power = 0;
+    cmd.kick = false; cmd.kick_power = 0;
 
     auto robot = world.get_robot_blue(robot_id);
     if (!robot) return cmd;
 
     float dx   = target_x_ - robot->x;
     float dy   = target_y_ - robot->y;
-    float dist = std::sqrt(dx * dx + dy * dy);
+    float dist = std::sqrt(dx*dx + dy*dy);
 
     if (dist < 30.0f) return cmd;
 
     float vx = KP * dx;
     float vy = KP * dy;
-    float speed = std::sqrt(vx * vx + vy * vy);
-    if (speed > MAX_SPEED) {
-        vx = vx / speed * MAX_SPEED;
-        vy = vy / speed * MAX_SPEED;
+
+    if (dist > 150.0f) {
+        auto [rx, ry] = compute_repulsion(robot->x, robot->y, world, robot_id);
+        vx += rx; vy += ry;
     }
 
-    float angle_err = target_angle_ - robot->angle;
-    while (angle_err >  M_PI) angle_err -= 2 * M_PI;
-    while (angle_err < -M_PI) angle_err += 2 * M_PI;
+    float speed = std::sqrt(vx*vx + vy*vy);
+    if (speed > MAX_SPEED) { vx = vx/speed*MAX_SPEED; vy = vy/speed*MAX_SPEED; }
 
-    cmd.vx = vx;
-    cmd.vy = vy;
-    cmd.vw = 2.0f * angle_err;
+    float ae = target_angle_ - robot->angle;
+    while (ae >  M_PI) ae -= 2*M_PI;
+    while (ae < -M_PI) ae += 2*M_PI;
+
+    cmd.vx = vx; cmd.vy = vy; cmd.vw = 2.0f*ae;
     return cmd;
 }
